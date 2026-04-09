@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Premio Sbloccato!</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    html, body {
+      margin: 0; padding: 0; overflow: hidden;
+      width: 100%; height: 100%;
+      background: #060e1a;
+    }
+    body::before { display: none; }
+
+    .reward-page {
+      position: fixed; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    /* Background particles */
+    .reward-page::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(0,217,255,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(157,0,255,0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* Glow ring behind sprite */
+    .reward-glow {
+      position: relative;
+      width: 200px; height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 24px;
+    }
+    .reward-glow::before {
+      content: '';
+      position: absolute; inset: -20px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow-color, rgba(0,217,255,0.15)) 0%, transparent 70%);
+      animation: glowPulse 2s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.08); }
+    }
+
+    .reward-sprite {
+      width: 180px; height: auto;
+      position: relative; z-index: 1;
+      animation: spriteBounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      opacity: 0;
+      filter: drop-shadow(0 0 20px var(--glow-color, rgba(0,217,255,0.4)));
+    }
+    @keyframes spriteBounce {
+      0% { opacity: 0; transform: scale(0) rotate(-10deg); }
+      60% { opacity: 1; transform: scale(1.15) rotate(3deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    .reward-label {
+      font-family: 'Rajdhani', sans-serif; font-size: 0.75rem;
+      color: #4a6a85; letter-spacing: 3px; text-transform: uppercase;
+      margin-bottom: 8px;
+      animation: fadeSlideUp 0.5s 0.3s ease forwards;
+      opacity: 0; transform: translateY(15px);
+    }
+
+    .reward-name {
+      font-family: 'Orbitron', sans-serif; font-size: 1.6rem;
+      font-weight: 900; letter-spacing: 3px;
+      margin-bottom: 12px;
+      animation: fadeSlideUp 0.5s 0.4s ease forwards;
+      opacity: 0; transform: translateY(15px);
+    }
+
+    .reward-desc {
+      font-family: 'Rajdhani', sans-serif; font-size: 1rem;
+      color: #7da3c0; line-height: 1.5;
+      max-width: 300px;
+      animation: fadeSlideUp 0.5s 0.6s ease forwards;
+      opacity: 0; transform: translateY(15px);
+    }
+
+    .reward-divider {
+      width: 60px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--glow-color, #00d9ff), transparent);
+      margin: 24px 0;
+      animation: fadeSlideUp 0.5s 0.7s ease forwards;
+      opacity: 0;
+    }
+
+    .reward-plus {
+      font-family: 'Orbitron', sans-serif; font-size: 0.85rem;
+      color: #00ff88; letter-spacing: 1px;
+      margin-bottom: 32px;
+      animation: fadeSlideUp 0.5s 0.8s ease forwards;
+      opacity: 0; transform: translateY(15px);
+    }
+
+    .reward-btn {
+      font-family: 'Orbitron', sans-serif; font-size: 0.8rem;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      padding: 14px 40px;
+      border: 1px solid rgba(0,217,255,0.3); border-radius: 12px;
+      background: rgba(0,217,255,0.08); color: #00d9ff;
+      cursor: pointer; transition: all 0.3s;
+      text-decoration: none; display: inline-block;
+      animation: fadeSlideUp 0.5s 1s ease forwards;
+      opacity: 0; transform: translateY(15px);
+    }
+    .reward-btn:active {
+      background: rgba(0,217,255,0.2);
+      box-shadow: 0 0 20px rgba(0,217,255,0.3);
+      transform: scale(0.97);
+    }
+
+    @keyframes fadeSlideUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Floating particles */
+    .particle {
+      position: fixed; border-radius: 50%;
+      pointer-events: none; opacity: 0;
+      animation: particleDrift 3s ease-out forwards;
+    }
+    @keyframes particleDrift {
+      0% { opacity: 0; transform: translateY(0) scale(0); }
+      20% { opacity: 0.8; transform: translateY(-20px) scale(1); }
+      100% { opacity: 0; transform: translateY(-120px) scale(0.5); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reward-page" id="reward-page">
+    <div class="reward-glow" id="reward-glow">
+      <img class="reward-sprite" id="reward-sprite" src="" alt="">
+    </div>
+    <div class="reward-label">CIBO SBLOCCATO</div>
+    <div class="reward-name" id="reward-name"></div>
+    <div class="reward-desc" id="reward-desc"></div>
+    <div class="reward-divider"></div>
+    <div class="reward-plus">+1 Cibo per BLINK</div>
+    <a href="../index.html" class="reward-btn">Torna a BLINK</a>
+  </div>
+
+  <script src="../js/gamedata.js"></script>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const level = params.get('level');
+    const reward = window.LEVEL_REWARDS && window.LEVEL_REWARDS[level];
+
+    if (reward) {
+      document.getElementById('reward-sprite').src = '../' + reward.sprite;
+      document.getElementById('reward-name').textContent = reward.name;
+      document.getElementById('reward-name').style.color = reward.color;
+      document.getElementById('reward-desc').textContent = reward.description;
+
+      // Set glow color
+      document.getElementById('reward-glow').style.setProperty('--glow-color', reward.color + '40');
+      document.querySelector('.reward-divider').style.setProperty('--glow-color', reward.color);
+      document.querySelector('.reward-sprite').style.setProperty('--glow-color', reward.color + '80');
+
+      // Spawn decorative particles
+      for (let i = 0; i < 12; i++) {
+        setTimeout(() => {
+          const p = document.createElement('div');
+          p.className = 'particle';
+          p.style.left = (20 + Math.random() * 60) + 'vw';
+          p.style.top = (30 + Math.random() * 40) + 'vh';
+          p.style.width = p.style.height = (3 + Math.random() * 5) + 'px';
+          p.style.background = reward.color;
+          p.style.animationDelay = (Math.random() * 0.5) + 's';
+          p.style.animationDuration = (2 + Math.random() * 2) + 's';
+          document.body.appendChild(p);
+        }, i * 200);
+      }
+
+      // Vibrate
+      if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+    } else {
+      document.getElementById('reward-name').textContent = 'Premio sconosciuto';
+    }
+  </script>
+</body>
+</html>

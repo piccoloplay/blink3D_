@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR Experience — Quantum AR</title>
+  <link rel="stylesheet" href="../css/style.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+      "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+    }
+  }
+  </script>
+
+  <style>
+    html, body { margin: 0; padding: 0; overflow: hidden; width: 100%; height: 100%; }
+    body::before { display: none; }
+
+    /* Challenge HUD */
+    .challenge-hud {
+      position: fixed; top: 48px; left: 50%; transform: translateX(-50%);
+      z-index: 90; display: none;
+      background: rgba(6,14,26,0.7);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(0,217,255,0.2);
+      border-radius: 14px; padding: 6px 16px;
+      text-align: center; min-width: 180px;
+    }
+    .challenge-hud.visible { display: block; }
+    .challenge-label {
+      font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
+      color: #7da3c0; letter-spacing: 1px; text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .challenge-counter {
+      font-family: 'Orbitron', sans-serif; font-size: 1rem;
+      font-weight: 700; color: #00d9ff;
+    }
+    .challenge-bar-bg {
+      height: 3px; background: rgba(255,255,255,0.08);
+      border-radius: 2px; margin-top: 4px; overflow: hidden;
+    }
+    .challenge-bar-fill {
+      height: 100%; background: linear-gradient(90deg, #00d9ff, #00ff88);
+      border-radius: 2px; transition: width 0.4s ease; width: 0%;
+    }
+
+    /* ── Floating controls bar ── */
+    .ar-controls-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(6,14,26,0.6);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(0,217,255,0.12);
+      padding: 8px 14px calc(8px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Feedback line */
+    .ar-feedback-line {
+      font-size: 0.75rem; color: #7da3c0; text-align: center;
+      margin-bottom: 6px; line-height: 1.3;
+      min-height: 1.3em;
+    }
+
+    /* Controls grid */
+    .ar-controls-grid {
+      display: flex; gap: 8px; align-items: flex-end;
+    }
+    .ar-ctrl {
+      flex: 1; min-width: 0;
+    }
+    .ar-ctrl-label {
+      font-family: 'Orbitron', sans-serif; font-size: 0.5rem;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: #4a6a85; display: flex; justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .ar-ctrl-val { color: #00d9ff; font-weight: 700; }
+    .ar-ctrl input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 3px;
+      background: rgba(255,255,255,0.12); border-radius: 2px; outline: none;
+    }
+    .ar-ctrl input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 20px; height: 20px;
+      border-radius: 50%; background: #00d9ff; cursor: pointer;
+      box-shadow: 0 0 8px rgba(0,217,255,0.4);
+    }
+
+    /* Action buttons row */
+    .ar-actions {
+      display: flex; gap: 6px; margin-top: 6px;
+    }
+    .ar-action-btn {
+      flex: 1; padding: 10px 6px;
+      font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+      font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      border: 1px solid rgba(0,217,255,0.25); border-radius: 8px;
+      background: rgba(0,217,255,0.08); color: #00d9ff;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .ar-action-btn:active {
+      background: rgba(0,217,255,0.2);
+      box-shadow: 0 0 12px rgba(0,217,255,0.3);
+    }
+    .ar-action-btn.primary {
+      background: rgba(0,217,255,0.15);
+      border-color: #00d9ff;
+    }
+
+    /* Toggle button */
+    .ar-toggle-btn {
+      padding: 10px 6px;
+      font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+      font-weight: 700; letter-spacing: 1px;
+      border: 1px solid rgba(255,51,102,0.3); border-radius: 8px;
+      background: rgba(255,51,102,0.08); color: #ff3366;
+      cursor: pointer; transition: all 0.2s; text-align: center;
+    }
+    .ar-toggle-btn.active {
+      background: rgba(0,255,136,0.12);
+      border-color: rgba(0,255,136,0.4);
+      color: #00ff88;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ar-fullscreen" style="display:block;">
+
+    <!-- MindAR container -->
+    <div id="ar-container"></div>
+
+    <!-- Close button -->
+    <button class="ar-close" id="ar-close">&times;</button>
+
+    <!-- HUD -->
+    <div class="ar-hud">
+      <div class="ar-hud-dot"></div>
+      <span>AR Live</span>
+    </div>
+
+    <!-- Challenge HUD -->
+    <div class="challenge-hud" id="challenge-hud">
+      <div class="challenge-label" id="challenge-label"></div>
+      <div class="challenge-counter" id="challenge-counter"></div>
+      <div class="challenge-bar-bg"><div class="challenge-bar-fill" id="challenge-bar"></div></div>
+    </div>
+
+    <!-- Tracking status -->
+    <div class="ar-tracking-banner" id="tracking-banner">
+      Inquadra l'immagine marker...
+    </div>
+
+    <!-- Floating controls bar -->
+    <div class="ar-controls-bar" id="controls-bar" style="display:none;">
+      <div class="ar-feedback-line" id="ar-feedback"></div>
+      <div class="ar-controls-grid" id="ar-controls"></div>
+      <div class="ar-actions" id="ar-actions"></div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Close button ──
+    document.getElementById('ar-close').addEventListener('click', () => {
+      window.location.href = '../index.html';
+    });
+
+    // ── Challenge completion → redirect to reward page ──
+    function onChallengeComplete(levelId) {
+      if (window.GameData) GameData.rewardAR(levelId);
+      window.location.href = 'reward.html?level=' + levelId;
+    }
+
+    // ── Challenge progress updater ──
+    function updateChallengeHUD(levelInstance) {
+      if (!levelInstance || !levelInstance.getProgress) return;
+      const p = levelInstance.getProgress();
+      document.getElementById('challenge-label').textContent = p.label;
+      document.getElementById('challenge-counter').textContent = p.current + ' / ' + p.target;
+      document.getElementById('challenge-bar').style.width = Math.min(100, (p.current / p.target) * 100) + '%';
+    }
+  </script>
+
+  <script src="../js/gamedata.js"></script>
+
+  <!-- AR module -->
+  <script type="module">
+    import { AREngine } from '../js/ar-engine.js';
+
+    (async function () {
+      const params = new URLSearchParams(window.location.search);
+      const level = params.get('level');
+
+      if (!level) {
+        document.getElementById('tracking-banner').textContent = 'Nessun livello specificato';
+        return;
+      }
+
+      // ── PET MODE ──
+      if (level === 'pet') {
+        const engine = new AREngine({ container: '#ar-container', targetSrc: '../assets/targets.mind' });
+        engine.init();
+
+        const banner = document.getElementById('tracking-banner');
+        document.getElementById('ar-container').addEventListener('target-found', () => {
+          banner.innerHTML = '<span style="color:var(--neon-green);">Marker rilevato!</span>';
+          setTimeout(() => { banner.style.opacity = '0'; }, 2000);
+        });
+        document.getElementById('ar-container').addEventListener('target-lost', () => {
+          banner.style.opacity = '1';
+          banner.innerHTML = '<span style="color:var(--neon-red);">Inquadra il marker per vedere BLINK</span>';
+        });
+
+        const { PetLevel } = await import('../js/pet-level.js');
+        new PetLevel(engine);
+        await engine.start();
+        return;
+      }
+
+      // ── NORMAL LEVELS ──
+      let data;
+      try {
+        const res = await fetch('../data/' + level + '.json');
+        data = await res.json();
+      } catch (e) {
+        document.getElementById('tracking-banner').textContent = 'Errore caricamento dati';
+        return;
+      }
+
+      // Show controls bar
+      const controlsBar = document.getElementById('controls-bar');
+      controlsBar.style.display = 'block';
+      const controlsEl = document.getElementById('ar-controls');
+      const actionsEl = document.getElementById('ar-actions');
+      const feedbackEl = document.getElementById('ar-feedback');
+
+      // Build compact controls
+      data.ar.controls.forEach(ctrl => {
+        if (ctrl.type === 'toggle') return; // toggles go in actions row
+
+        const div = document.createElement('div');
+        div.className = 'ar-ctrl';
+        div.innerHTML = '<div class="ar-ctrl-label"><span>' + ctrl.label + '</span><span class="ar-ctrl-val" id="val-' + ctrl.id + '">' + ctrl.default + '</span></div>' +
+          '<input type="range" id="ctrl-' + ctrl.id + '" min="' + ctrl.min + '" max="' + ctrl.max + '" step="' + ctrl.step + '" value="' + ctrl.default + '">';
+        controlsEl.appendChild(div);
+      });
+
+      // Init AR engine
+      const engine = new AREngine({ container: '#ar-container', targetSrc: '../assets/targets.mind' });
+      engine.init();
+
+      // Tracking events
+      const banner = document.getElementById('tracking-banner');
+      document.getElementById('ar-container').addEventListener('target-found', () => {
+        banner.innerHTML = '<span style="color:var(--neon-green);">Marker rilevato</span>';
+        setTimeout(() => { banner.style.opacity = '0'; }, 2000);
+      });
+      document.getElementById('ar-container').addEventListener('target-lost', () => {
+        banner.style.opacity = '1';
+        banner.innerHTML = '<span style="color:var(--neon-red);">Inquadra di nuovo il marker</span>';
+      });
+
+      // ── Level setup ──
+      let levelInstance;
+
+      if (level === 'laser') {
+        const { LaserLevel } = await import('../js/laser-level.js');
+        levelInstance = new LaserLevel(engine, data.ar);
+
+        document.getElementById('ctrl-frequency')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setFrequency(v);
+          document.getElementById('val-frequency').textContent = v;
+          feedbackEl.innerHTML = v < data.ar.threshold_frequency
+            ? '<span style="color:#ff3366;">Sotto soglia (' + data.ar.threshold_frequency + ' THz)</span>'
+            : '<span style="color:#00ff88;">Sopra soglia!</span> elettroni emessi';
+        });
+        document.getElementById('ctrl-intensity')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setIntensity(v);
+          document.getElementById('val-intensity').textContent = v;
+        });
+        feedbackEl.textContent = 'Alza la frequenza oltre ' + data.ar.threshold_frequency + ' THz';
+
+      } else if (level === 'doppia-fenditura') {
+        const { SlitLevel } = await import('../js/slit-level.js');
+        levelInstance = new SlitLevel(engine, data.ar);
+
+        document.getElementById('ctrl-fire_rate')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setFireRate(v);
+          document.getElementById('val-fire_rate').textContent = v;
+        });
+
+        // Detector toggle as action button
+        const detBtn = document.createElement('button');
+        detBtn.className = 'ar-toggle-btn';
+        detBtn.textContent = 'DETECTOR OFF';
+        detBtn.id = 'btn-detector';
+        actionsEl.appendChild(detBtn);
+        detBtn.addEventListener('click', () => {
+          const active = detBtn.classList.toggle('active');
+          levelInstance.setDetector(active);
+          detBtn.textContent = active ? 'DETECTOR ON' : 'DETECTOR OFF';
+          feedbackEl.innerHTML = active
+            ? '<span style="color:#ff3366;">Rivelatore ON</span> niente interferenza'
+            : '<span style="color:#00ff88;">Rivelatore OFF</span> frange visibili!';
+        });
+
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'ar-action-btn';
+        clearBtn.textContent = 'PULISCI';
+        clearBtn.addEventListener('click', () => levelInstance?.clearScreen());
+        actionsEl.appendChild(clearBtn);
+
+        feedbackEl.textContent = 'Accumula particelle, poi attiva il detector';
+
+      } else if (level === 'entanglement') {
+        const { EntanglementLevel } = await import('../js/entanglement-level.js');
+        levelInstance = new EntanglementLevel(engine, data.ar);
+
+        document.getElementById('ctrl-distance')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setDistance(v);
+          document.getElementById('val-distance').textContent = v;
+        });
+        document.getElementById('ctrl-measure_angle')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setMeasureAngle(v);
+          document.getElementById('val-measure_angle').textContent = v + '\u00B0';
+        });
+
+        const measureBtn = document.createElement('button');
+        measureBtn.className = 'ar-action-btn primary';
+        measureBtn.textContent = 'MISURA SPIN';
+        actionsEl.appendChild(measureBtn);
+        measureBtn.addEventListener('click', () => {
+          const r = levelInstance.measure();
+          feedbackEl.innerHTML = 'A: <strong style="color:#00d9ff;">' + r.spinA + '</strong> B: <strong style="color:#9d00ff;">' + r.spinB + '</strong> ' +
+            (r.correlated ? '<span style="color:#00ff88;">Correlate</span>' : '<span style="color:#ff3366;">Non correlate</span>') +
+            ' | ' + (r.correlationRate*100).toFixed(0) + '%';
+          setTimeout(() => levelInstance.reset(), 1500);
+        });
+        feedbackEl.textContent = 'Premi Misura Spin 10 volte';
+
+      } else if (level === 'tunnel') {
+        const { TunnelLevel } = await import('../js/tunnel-level.js');
+        levelInstance = new TunnelLevel(engine, data.ar);
+
+        document.getElementById('ctrl-energy')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setEnergy(v);
+          document.getElementById('val-energy').textContent = v;
+          showTunnelFeedback();
+        });
+        document.getElementById('ctrl-barrier_width')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setBarrierWidth(v);
+          document.getElementById('val-barrier_width').textContent = v;
+          showTunnelFeedback();
+        });
+        document.getElementById('ctrl-barrier_height')?.addEventListener('input', (e) => {
+          const v = parseFloat(e.target.value);
+          levelInstance.setBarrierHeight(v);
+          document.getElementById('val-barrier_height').textContent = v;
+          showTunnelFeedback();
+        });
+
+        const launchBtn = document.createElement('button');
+        launchBtn.className = 'ar-action-btn primary';
+        launchBtn.textContent = 'LANCIA';
+        actionsEl.appendChild(launchBtn);
+        launchBtn.addEventListener('click', () => { levelInstance.launch(); showTunnelFeedback(); });
+
+        function showTunnelFeedback() {
+          const s = levelInstance.getStats();
+          feedbackEl.innerHTML = 'P: <strong style="color:#00d9ff;">' + (s.probability*100).toFixed(0) + '%</strong> Passate: <strong style="color:#00ff88;">' + s.tunneled + '</strong>/' + s.launched;
+        }
+        feedbackEl.textContent = 'Lancia particelle contro la barriera';
+      }
+
+      // ── Challenge system ──
+      if (levelInstance && levelInstance.getProgress) {
+        document.getElementById('challenge-hud').classList.add('visible');
+        updateChallengeHUD(levelInstance);
+
+        document.getElementById('ar-container').addEventListener('challenge-complete', () => {
+          onChallengeComplete(level);
+        });
+
+        engine.onUpdate(() => updateChallengeHUD(levelInstance));
+      }
+
+      // Start AR
+      await engine.start();
+    })();
+  </script>
+</body>
+</html>
