@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Info — BLINK Quantum Pet</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .info-logos {
+      display: flex; justify-content: center; gap: 24px;
+      align-items: center; margin: 24px 0;
+      flex-wrap: wrap;
+    }
+    .info-logo {
+      height: 60px; width: auto;
+      filter: brightness(1.1);
+      transition: transform 0.2s;
+    }
+    .info-logo:active { transform: scale(1.05); }
+    .info-divider {
+      width: 60px; height: 2px; margin: 20px auto;
+      background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+    }
+    .info-event {
+      text-align: center; padding: 20px;
+      background: rgba(0,217,255,0.04);
+      border: 1px solid rgba(0,217,255,0.12);
+      border-radius: 12px; margin: 16px 0;
+    }
+    .info-event-title {
+      font-family: 'Orbitron', sans-serif; font-size: 0.8rem;
+      font-weight: 700; color: var(--neon-cyan);
+      letter-spacing: 2px; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .info-event-desc {
+      font-size: 0.85rem; color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .info-event-desc a {
+      color: var(--neon-cyan); text-decoration: none;
+    }
+    .info-links {
+      display: flex; flex-direction: column; gap: 8px;
+      margin-top: 16px;
+    }
+    .info-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(0,217,255,0.08);
+      border-radius: 10px;
+      text-decoration: none; color: var(--text-dim);
+      font-size: 0.8rem; transition: border-color 0.2s;
+    }
+    .info-link:active { border-color: var(--neon-cyan); }
+    .info-link-icon {
+      font-size: 1.2rem; flex-shrink: 0;
+    }
+    .info-link-label {
+      font-family: 'Orbitron', sans-serif; font-size: 0.6rem;
+      color: var(--text-muted); letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .info-link-url {
+      color: var(--neon-cyan); font-size: 0.75rem;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="../index.html" class="nav-logo">BLINK</a>
+      <a href="../index.html" class="nav-back">&larr; Home</a>
+    </div>
+  </nav>
+
+  <main class="level-content">
+    <h1 class="level-title" style="font-size:1.3rem;">BLINK — Quantum Pet</h1>
+    <p class="level-subtitle">Un'avventura nella meccanica quantistica</p>
+
+    <!-- Logos -->
+    <div class="info-logos">
+      <a href="https://www.ino.cnr.it/" target="_blank" rel="noopener">
+        <img class="info-logo" src="../assets/logos/cnr-ino.png" alt="CNR-INO">
+      </a>
+      <a href="https://nqsti.it/" target="_blank" rel="noopener">
+        <img class="info-logo" src="../assets/logos/nqsti.png" alt="NQSTI">
+      </a>
+    </div>
+
+    <div class="info-divider"></div>
+
+    <!-- Event -->
+    <div class="card fade-in-up stagger-1">
+      <h3 class="card-heading">Il progetto</h3>
+      <p class="card-text">BLINK - Quantum Pet e' un'applicazione educativa che insegna i fondamenti della meccanica quantistica attraverso esperienze di Realta Aumentata e un pet virtuale da accudire. Realizzata da CNR-INO (Istituto Nazionale di Ottica).</p>
+    </div>
+
+    <div class="info-event fade-in-up stagger-2">
+      <div class="info-event-title">III Congresso Nazionale NQSTI</div>
+      <div class="info-event-desc">
+        Presentata al Congresso Nazionale delle Tecnologie Quantistiche presso Citta della Scienza, Napoli.<br>
+        Sessioni di gioco interattivo ed esperimenti hands-on.
+      </div>
+    </div>
+
+    <!-- Links -->
+    <div class="info-links fade-in-up stagger-3">
+      <a href="https://www.ino.cnr.it/?page_id=15732" target="_blank" rel="noopener" class="info-link">
+        <span class="info-link-icon">🔬</span>
+        <div>
+          <div class="info-link-label">CNR-INO</div>
+          <div class="info-link-url">ino.cnr.it</div>
+        </div>
+      </a>
+      <a href="https://nqsti.it/events/terzo-congresso-nazionale-nqsti" target="_blank" rel="noopener" class="info-link">
+        <span class="info-link-icon">🎓</span>
+        <div>
+          <div class="info-link-label">Evento NQSTI</div>
+          <div class="info-link-url">nqsti.it/events/terzo-congresso-nazionale-nqsti</div>
+        </div>
+      </a>
+    </div>
+
+    <!-- Legal -->
+    <div class="fade-in-up stagger-4" style="text-align:center; margin-top:2rem;">
+      <a href="privacy.html" class="btn btn-ghost" style="margin-right:8px;">Privacy Policy</a>
+      <a href="cookie.html" class="btn btn-ghost">Cookie Policy</a>
+    </div>
+  </main>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
